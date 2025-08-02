@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>보안문자 입력 게임</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+    }
+    #captcha {
+      font-size: 36px;
+      font-weight: bold;
+      letter-spacing: 10px;
+      margin-bottom: 20px;
+      text-decoration: line-through;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    input[type="text"] {
+      font-size: 20px;
+      padding: 5px;
+      width: 200px;
+    }
+    button {
+      margin-top: 10px;
+      font-size: 18px;
+      padding: 8px 20px;
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>인증예매</h2>
+  <p>보안문자를 정확히 입력해주세요.</p>
+
+  <div id="captcha"></div>
+  <input type="text" id="userInput" placeholder="보안문자 입력">
+  <br>
+  <button onclick="checkInput()">입력완료</button>
+
+  <div id="result"></div>
+
+  <script>
+    let currentCaptcha = '';
+    let startTime = null;
+    const timeLimit = 15; // 초
+
+    function generateCaptcha() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      currentCaptcha = result;
+      document.getElementById('captcha').textContent = result;
+      document.getElementById('userInput').value = '';
+      document.getElementById('result').textContent = '';
+      startTime = Date.now();
+    }
+
+    function checkInput() {
+      const input = document.getElementById('userInput').value.trim().toUpperCase();
+      const elapsed = (Date.now() - startTime) / 1000;
+
+      if (elapsed > timeLimit) {
+        document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시도해주세요.`;
+        generateCaptcha();
+        return;
+      }
+
+      if (input === currentCaptcha) {
+        document.getElementById('result').textContent = `✅ 성공! ${elapsed.toFixed(2)}초 걸렸습니다.`;
+        setTimeout(generateCaptcha, 2000);
+      } else {
+        document.getElementById('result').textContent = `❌ 틀렸습니다. 다시 시도해주세요.`;
+      }
+    }
+
+    // 페이지 로드 시 첫 캡차 생성
+    window.onload = generateCaptcha;
+  </script>
+</body>
+</html>
