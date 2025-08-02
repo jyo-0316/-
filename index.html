@@ -20,6 +20,11 @@
       margin-top: 20px;
       font-size: 18px;
     }
+    #timer {
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: red;
+    }
     input[type="text"] {
       font-size: 20px;
       padding: 5px;
@@ -42,6 +47,7 @@
   <p>보안문자를 정확히 입력해주세요.</p>
 
   <div id="captcha"></div>
+  <div id="timer"></div>
   <input type="text" id="userInput" placeholder="보안문자 입력">
   <br>
   <button onclick="checkInput()">입력완료</button>
@@ -52,18 +58,38 @@
     let currentCaptcha = '';
     let startTime = null;
     const timeLimit = 15; // 초
+    let timerInterval = null;
 
     function generateCaptcha() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
       let result = '';
-      for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      while (result.length < 6) {
+        const randIndex = Math.floor(Math.random() * chars.length);
+        const char = chars[randIndex];
+        if (!result.includes(char)) {
+          result += char;
+        }
       }
       currentCaptcha = result;
       document.getElementById('captcha').textContent = result;
       document.getElementById('userInput').value = '';
       document.getElementById('result').textContent = '';
       startTime = Date.now();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const remaining = Math.max(0, timeLimit - elapsed).toFixed(1);
+        document.getElementById('timer').textContent = `⏳ 남은 시간: ${remaining}초`;
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시도해주세요.`;
+          generateCaptcha();
+        }
+      }, 100);
     }
 
     function checkInput() {
@@ -77,6 +103,7 @@
       }
 
       if (input === currentCaptcha) {
+        clearInterval(timerInterval);
         document.getElementById('result').textContent = `✅ 성공! ${elapsed.toFixed(2)}초 걸렸습니다.`;
         setTimeout(generateCaptcha, 2000);
       } else {
