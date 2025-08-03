@@ -14,7 +14,11 @@
       font-weight: bold;
       letter-spacing: 10px;
       margin-bottom: 20px;
-      text-decoration: line-through;
+      position: relative;
+      display: inline-block;
+    }
+    #captchaCanvas {
+      display: none;
     }
     #result {
       margin-top: 20px;
@@ -34,7 +38,18 @@
       margin-top: 10px;
       font-size: 18px;
       padding: 8px 20px;
-      background-color: red;
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #restartBtn {
+      display: none;
+      margin-top: 10px;
+      font-size: 16px;
+      padding: 6px 16px;
+      background-color: gray;
       color: white;
       border: none;
       border-radius: 5px;
@@ -46,19 +61,47 @@
   <h2>인증예매</h2>
   <p>보안문자를 정확히 입력해주세요.</p>
 
+  <canvas id="captchaCanvas" width="300" height="60"></canvas>
   <div id="captcha"></div>
   <div id="timer"></div>
   <input type="text" id="userInput" placeholder="보안문자 입력">
   <br>
   <button onclick="checkInput()">입력완료</button>
+  <button id="restartBtn" onclick="generateCaptcha()">다시 시작하기</button>
 
   <div id="result"></div>
 
   <script>
     let currentCaptcha = '';
     let startTime = null;
-    const timeLimit = 7; // 초
+    const timeLimit = 7; // 7초 제한
     let timerInterval = null;
+
+    function drawCaptcha(text) {
+      const canvas = document.getElementById('captchaCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = '36px Arial';
+      ctx.fillStyle = '#000';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 10, 30);
+
+      // 밑줄: 각기 다른 위치에 랜덤 선
+      for (let i = 0; i < 2; i++) {
+        const y = 20 + Math.random() * 20;
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      const dataUrl = canvas.toDataURL();
+      const captchaDiv = document.getElementById('captcha');
+      captchaDiv.innerHTML = `<img src="${dataUrl}" alt="captcha">`;
+    }
 
     function generateCaptcha() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -71,9 +114,10 @@
         }
       }
       currentCaptcha = result;
-      document.getElementById('captcha').textContent = result;
+      drawCaptcha(result);
       document.getElementById('userInput').value = '';
       document.getElementById('result').textContent = '';
+      document.getElementById('restartBtn').style.display = 'none';
       startTime = Date.now();
       startTimer();
     }
@@ -86,8 +130,8 @@
         document.getElementById('timer').textContent = `⏳ 남은 시간: ${remaining}초`;
         if (remaining <= 0) {
           clearInterval(timerInterval);
-          document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시도해주세요.`;
-          generateCaptcha();
+          document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시작해주세요.`;
+          document.getElementById('restartBtn').style.display = 'inline-block';
         }
       }, 100);
     }
@@ -97,15 +141,15 @@
       const elapsed = (Date.now() - startTime) / 1000;
 
       if (elapsed > timeLimit) {
-        document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시도해주세요.`;
-        generateCaptcha();
+        document.getElementById('result').textContent = `⏰ 시간 초과! 다시 시작해주세요.`;
+        document.getElementById('restartBtn').style.display = 'inline-block';
         return;
       }
 
       if (input === currentCaptcha) {
         clearInterval(timerInterval);
         document.getElementById('result').textContent = `✅ 성공! ${elapsed.toFixed(2)}초 걸렸습니다.`;
-        setTimeout(generateCaptcha, 2000);
+        document.getElementById('restartBtn').style.display = 'inline-block';
       } else {
         document.getElementById('result').textContent = `❌ 틀렸습니다. 다시 시도해주세요.`;
       }
@@ -116,3 +160,4 @@
   </script>
 </body>
 </html>
+
